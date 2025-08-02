@@ -46,6 +46,11 @@ class IndexedDBStorage {
           checkInsStore.createIndex('userId', 'userId');
           checkInsStore.createIndex('date', 'date');
         }
+
+        // App settings store
+        if (!db.objectStoreNames.contains('appSettings')) {
+          db.createObjectStore('appSettings', { keyPath: 'id' });
+        }
       };
     });
   }
