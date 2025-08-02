@@ -8,6 +8,7 @@ export interface UserProfile {
   age: number;
   goals: string[];
   lifestyle: string[];
+  hasSeenTutorial?: boolean;
 }
 
 export interface Partner {
@@ -48,4 +49,9 @@ export interface BluetoothSync {
   isHuggingMode: boolean;
   partnerDevice: BluetoothDevice | null;
   isConnected: boolean;
+}
+
+export interface AppSettings {
+  hasSeenTutorial: boolean;
+  userId?: string;
 }

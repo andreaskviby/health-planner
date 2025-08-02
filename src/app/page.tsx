@@ -4,12 +4,14 @@ import { useState, useEffect } from 'react';
 import { Heart, Bluetooth } from 'lucide-react';
 import { useBluetooth } from '@/hooks/useBluetooth';
 import ProfileSetup from '@/components/ProfileSetup';
+import WelcomeTutorial from '@/components/WelcomeTutorial';
 import Dashboard from '@/components/Dashboard';
 import { storage } from '@/lib/storage';
-import { UserProfile } from '@/lib/types';
+import { UserProfile, AppSettings } from '@/lib/types';
 
 export default function Home() {
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+  const [hasSeenTutorial, setHasSeenTutorial] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { bluetoothState, enterHuggingMode } = useBluetooth();
 
@@ -17,6 +19,14 @@ export default function Home() {
     async function loadUser() {
       try {
         await storage.init();
+        
+        // Check if user has seen tutorial
+        const settings = await storage.get<AppSettings>('appSettings', 'tutorial');
+        if (settings?.hasSeenTutorial) {
+          setHasSeenTutorial(true);
+        }
+        
+        // Load user profile
         const users = await storage.getAll<UserProfile>('userProfiles');
         if (users.length > 0) {
           setCurrentUser(users[0]);
@@ -30,6 +40,29 @@ export default function Home() {
     loadUser();
   }, []);
 
+  const handleTutorialComplete = async () => {
+    try {
+      // Mark tutorial as seen
+      await storage.store('appSettings', { 
+        id: 'tutorial', 
+        hasSeenTutorial: true 
+      });
+      setHasSeenTutorial(true);
+    } catch (error) {
+      console.error('Error saving tutorial completion:', error);
+      // Still proceed if storage fails
+      setHasSeenTutorial(true);
+    }
+  };
+
+  const handleProfileComplete = async (profile: UserProfile) => {
+    setCurrentUser(profile);
+    // If user just completed profile setup, mark tutorial as seen too
+    if (!hasSeenTutorial) {
+      await handleTutorialComplete();
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900">
@@ -41,8 +74,13 @@ export default function Home() {
     );
   }
 
+  // Show tutorial for new users
+  if (!hasSeenTutorial && !currentUser) {
+    return <WelcomeTutorial onComplete={handleTutorialComplete} />;
+  }
+
   if (!currentUser) {
-    return <ProfileSetup onComplete={setCurrentUser} />;
+    return <ProfileSetup onComplete={handleProfileComplete} />;
   }
 
   if (bluetoothState.isHuggingMode) {
