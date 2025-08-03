@@ -20,8 +20,8 @@ export function useBluetooth() {
       setBluetoothState(prev => ({ ...prev, isHuggingMode: true }));
       
       const device = await navigator.bluetooth.requestDevice({
-        filters: [{ services: ['health_planner_service'] }],
-        optionalServices: ['health_planner_service']
+        filters: [{ services: ['12345678-1234-5678-9abc-def123456789'] }],
+        optionalServices: ['12345678-1234-5678-9abc-def123456789']
       });
 
       const server = await device.gatt?.connect();
@@ -71,8 +71,8 @@ export function useBluetooth() {
       const server = bluetoothState.partnerDevice.gatt;
       if (!server) throw new Error('GATT server not available');
 
-      const service = await server.getPrimaryService('health_planner_service');
-      const characteristic = await service.getCharacteristic('sync_data');
+      const service = await server.getPrimaryService('12345678-1234-5678-9abc-def123456789');
+      const characteristic = await service.getCharacteristic('87654321-4321-8765-cba9-fed987654321');
       
       const encoder = new TextEncoder();
       await characteristic.writeValue(encoder.encode(JSON.stringify(data)));
