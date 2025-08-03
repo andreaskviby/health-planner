@@ -52,6 +52,15 @@ export interface BluetoothSync {
 }
 
 export interface AppSettings {
+  id?: string;
   hasSeenTutorial: boolean;
   userId?: string;
+}
+
+export interface AppVersion {
+  id: string;
+  version: string;
+  buildDate: string;
+  lastChecked?: string;
+  updateAvailable?: boolean;
 }

@@ -15,11 +15,14 @@ import {
 } from 'lucide-react';
 import { UserProfile, DailyCheckIn, HealthPlan, FoodList } from '@/lib/types';
 import { useBluetooth } from '@/hooks/useBluetooth';
+import { useVersion } from '@/hooks/useVersion';
 import { storage } from '@/lib/storage';
 import { generateHealthPlan, generateMotivationalMessage } from '@/lib/openai';
 import DailyCheckInModal from './DailyCheckInModal';
 import HealthPlanModal from './HealthPlanModal';
 import FoodListModal from './FoodListModal';
+import VersionInfo from './VersionInfo';
+import UpdateNotification from './UpdateNotification';
 
 interface DashboardProps {
   user: UserProfile;
@@ -34,8 +37,10 @@ export default function Dashboard({ user }: DashboardProps) {
   const [showFoodListModal, setShowFoodListModal] = useState(false);
   const [motivationalMessage, setMotivationalMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   
   const { enterHuggingMode, isSupported } = useBluetooth();
+  const { updateAvailable, applyUpdate, hasJustUpdated } = useVersion();
 
   useEffect(() => {
     const loadData = async () => {
@@ -137,8 +142,42 @@ export default function Dashboard({ user }: DashboardProps) {
     return Math.min(100, (currentChange / totalChange) * 100);
   };
 
+  const handleApplyUpdate = async () => {
+    setIsUpdating(true);
+    await applyUpdate();
+    // Note: The page will reload after this, so isUpdating state won't persist
+  };
+
+  const handleDismissUpdate = () => {
+    // User chose to dismiss the update notification
+    // It will show again on next app launch if update is still available
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 p-4">
+      {/* Update Notification */}
+      <UpdateNotification
+        isVisible={updateAvailable}
+        onUpdate={handleApplyUpdate}
+        onDismiss={handleDismissUpdate}
+        isUpdating={isUpdating}
+      />
+
+      {/* Just Updated Notification */}
+      {hasJustUpdated && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-sm mx-4">
+          <div className="bg-green-600 text-white rounded-lg shadow-xl p-4">
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-green-300 rounded-full animate-pulse"></div>
+              <span className="text-sm font-medium">Appen har uppdaterats!</span>
+            </div>
+            <p className="text-xs text-green-100 mt-1">
+              Du använder nu den senaste versionen av Health Planner.
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <header className="flex items-center justify-between mb-8">
@@ -311,6 +350,9 @@ export default function Dashboard({ user }: DashboardProps) {
               </button>
             </div>
           )}
+
+          {/* Version Info */}
+          <VersionInfo />
         </div>
       </div>
 
