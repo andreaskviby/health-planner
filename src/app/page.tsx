@@ -13,7 +13,7 @@ export default function Home() {
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [hasSeenTutorial, setHasSeenTutorial] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const { bluetoothState, enterHuggingMode } = useBluetooth();
+  const { bluetoothState, enterHuggingMode, hasNativeBluetoothAPI, isMobile } = useBluetooth();
 
   useEffect(() => {
     async function loadUser() {
@@ -89,16 +89,35 @@ export default function Home() {
         <div className="text-center text-white p-8">
           <Heart className="w-24 h-24 mx-auto mb-6 animate-pulse" />
           <h1 className="text-4xl font-bold mb-4">Kramar Mode Aktiverat! 🤗</h1>
-          <p className="text-xl mb-6">Söker efter din partner...</p>
+          <p className="text-xl mb-6">
+            {hasNativeBluetoothAPI ? 'Söker efter din partner...' : 'Ansluter till din partner...'}
+          </p>
           {bluetoothState.isConnected ? (
             <div className="bg-white/20 backdrop-blur-sm rounded-lg p-6">
               <Bluetooth className="w-12 h-12 mx-auto mb-4 text-green-300" />
-              <p className="text-lg">Ansluten till partner! Data synkas...</p>
+              <p className="text-lg">
+                {hasNativeBluetoothAPI ? 'Ansluten till partner! Data synkas...' : 'Ansluten! Ni är nu i kramar mode! 💕'}
+              </p>
             </div>
           ) : (
             <div className="animate-pulse">
               <Bluetooth className="w-12 h-12 mx-auto mb-4" />
-              <p>Håll enheten nära din partner...</p>
+              <p>
+                {hasNativeBluetoothAPI 
+                  ? 'Håll enheten nära din partner...' 
+                  : isMobile 
+                    ? 'Förbereder kramar mode för mobil...' 
+                    : 'Aktiverar kramar mode...'
+                }
+              </p>
+            </div>
+          )}
+          {!hasNativeBluetoothAPI && isMobile && (
+            <div className="mt-4 bg-yellow-500/20 backdrop-blur-sm rounded-lg p-4">
+              <p className="text-sm text-yellow-100">
+                📱 Mobilläge: Full Bluetooth-support kräver Chrome på Android. 
+                Du kan fortfarande använda kramar mode med begränsad funktionalitet.
+              </p>
             </div>
           )}
         </div>

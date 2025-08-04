@@ -39,7 +39,7 @@ export default function Dashboard({ user }: DashboardProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   
-  const { enterHuggingMode, isSupported } = useBluetooth();
+  const { enterHuggingMode, hasNativeBluetoothAPI, isMobile } = useBluetooth();
   const { updateAvailable, applyUpdate, hasJustUpdated } = useVersion();
 
   useEffect(() => {
@@ -187,15 +187,14 @@ export default function Dashboard({ user }: DashboardProps) {
           </div>
           
           <div className="flex space-x-2">
-            {isSupported && (
-              <button
-                onClick={enterHuggingMode}
-                className="bg-pink-500 hover:bg-pink-600 text-white p-3 rounded-full transition-all"
-                title="Kramar Mode"
-              >
-                <Heart className="w-6 h-6" />
-              </button>
-            )}
+            {/* Always show hugging mode button for better mobile UX */}
+            <button
+              onClick={enterHuggingMode}
+              className="bg-pink-500 hover:bg-pink-600 text-white p-3 rounded-full transition-all"
+              title={hasNativeBluetoothAPI ? "Kramar Mode (Bluetooth)" : "Kramar Mode"}
+            >
+              <Heart className="w-6 h-6" />
+            </button>
             
             <button className="bg-white/20 hover:bg-white/30 text-white p-3 rounded-full transition-all">
               <Settings className="w-6 h-6" />
@@ -335,21 +334,26 @@ export default function Dashboard({ user }: DashboardProps) {
             </div>
           </div>
 
-          {/* Bluetooth Sync */}
-          {isSupported && (
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6">
-              <div className="flex items-center mb-4">
-                <Bluetooth className="w-8 h-8 text-indigo-400 mr-3" />
-                <h3 className="text-lg font-semibold text-white">Partner</h3>
-              </div>
+          {/* Partner Sync - Always available with appropriate messaging */}
+          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6">
+            <div className="flex items-center mb-4">
+              <Bluetooth className="w-8 h-8 text-indigo-400 mr-3" />
+              <h3 className="text-lg font-semibold text-white">Partner</h3>
+            </div>
+            <div className="space-y-2">
               <button
                 onClick={enterHuggingMode}
-                className="bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white px-4 py-2 rounded text-sm transition-all"
+                className="bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white px-4 py-2 rounded text-sm transition-all w-full"
               >
                 Aktivera kramar mode
               </button>
+              {!hasNativeBluetoothAPI && isMobile && (
+                <p className="text-xs text-gray-300">
+                  📱 Mobilläge: Begränsad Bluetooth-support
+                </p>
+              )}
             </div>
-          )}
+          </div>
 
           {/* Version Info */}
           <VersionInfo />
