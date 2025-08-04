@@ -34,6 +34,32 @@ export interface HealthPlan {
   updatedAt: Date;
 }
 
+export interface Recipe {
+  id: string;
+  userId: string;
+  title: string;
+  description: string;
+  ingredients: string[];
+  instructions: string[];
+  cookingTime: string;
+  servings: string;
+  source: 'manual' | 'link' | 'ai';
+  sourceUrl?: string;
+  createdAt: Date;
+}
+
+export interface Activity {
+  id: string;
+  userId: string;
+  name: string;
+  description: string;
+  duration: string;
+  difficulty: 'Lätt' | 'Medel' | 'Svår';
+  category: 'Kondition' | 'Styrka' | 'Flexibilitet' | 'Balans' | 'Mental hälsa' | 'Utomhus' | 'Grupp';
+  source: 'manual' | 'ai';
+  createdAt: Date;
+}
+
 export interface DailyCheckIn {
   id: string;
   userId: string;

@@ -63,6 +63,10 @@ export default function Home() {
     }
   };
 
+  const handleUserUpdate = (updatedUser: UserProfile) => {
+    setCurrentUser(updatedUser);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-full min-h-screen min-h-[100vh] min-h-[100dvh] flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 pt-safe pb-safe">
@@ -125,5 +129,5 @@ export default function Home() {
     );
   }
 
-  return <Dashboard user={currentUser} />;
+  return <Dashboard user={currentUser} onUserUpdate={handleUserUpdate} />;
 }

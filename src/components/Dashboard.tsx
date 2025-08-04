@@ -11,9 +11,9 @@ import {
   Bluetooth,
   Settings,
   ChefHat,
-  Activity
+  Activity as ActivityIcon
 } from 'lucide-react';
-import { UserProfile, DailyCheckIn, HealthPlan, FoodList } from '@/lib/types';
+import { UserProfile, DailyCheckIn, HealthPlan, FoodList, Recipe, Activity } from '@/lib/types';
 import { useBluetooth } from '@/hooks/useBluetooth';
 import { useVersion } from '@/hooks/useVersion';
 import { storage } from '@/lib/storage';
@@ -21,20 +21,30 @@ import { generateHealthPlan, generateMotivationalMessage } from '@/lib/openai';
 import DailyCheckInModal from './DailyCheckInModal';
 import HealthPlanModal from './HealthPlanModal';
 import FoodListModal from './FoodListModal';
+import RecipeModal from './RecipeModal';
+import ActivitiesModal from './ActivitiesModal';
+import SettingsModal from './SettingsModal';
 import VersionInfo from './VersionInfo';
 import UpdateNotification from './UpdateNotification';
 
 interface DashboardProps {
   user: UserProfile;
+  onUserUpdate?: (user: UserProfile) => void;
 }
 
-export default function Dashboard({ user }: DashboardProps) {
+export default function Dashboard({ user, onUserUpdate }: DashboardProps) {
+  const [currentUser, setCurrentUser] = useState(user);
   const [todayCheckIn, setTodayCheckIn] = useState<DailyCheckIn | null>(null);
   const [healthPlan, setHealthPlan] = useState<HealthPlan | null>(null);
   const [foodList, setFoodList] = useState<FoodList | null>(null);
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [activities, setActivities] = useState<Activity[]>([]);
   const [showCheckInModal, setShowCheckInModal] = useState(false);
   const [showHealthPlanModal, setShowHealthPlanModal] = useState(false);
   const [showFoodListModal, setShowFoodListModal] = useState(false);
+  const [showRecipeModal, setShowRecipeModal] = useState(false);
+  const [showActivitiesModal, setShowActivitiesModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [motivationalMessage, setMotivationalMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -47,18 +57,31 @@ export default function Dashboard({ user }: DashboardProps) {
       await loadTodayData();
       await loadHealthPlan();
       await loadFoodList();
+      await loadRecipes();
+      await loadActivities();
     };
     loadData();
-  }, [user]);
+  }, [currentUser]);
 
   const loadTodayData = async () => {
     try {
       const today = new Date().toDateString();
       const checkIns = await storage.getAll<DailyCheckIn>('dailyCheckIns');
       const todayData = checkIns.find(c => 
-        c.userId === user.id && new Date(c.date).toDateString() === today
+        c.userId === currentUser.id && new Date(c.date).toDateString() === today
       );
       setTodayCheckIn(todayData || null);
+      
+      // Check for afternoon reminder after loading today's data
+      const now = new Date();
+      const currentHour = now.getHours();
+      
+      // If it's after 16:00 and no check-in, show reminder
+      if (currentHour >= 16 && !todayData) {
+        setTimeout(() => {
+          setShowCheckInModal(true);
+        }, 2000); // 2 second delay to let the UI settle
+      }
     } catch (error) {
       console.error('Error loading today data:', error);
     }
@@ -67,7 +90,7 @@ export default function Dashboard({ user }: DashboardProps) {
   const loadHealthPlan = async () => {
     try {
       const plans = await storage.getAll<HealthPlan>('healthPlans');
-      const userPlan = plans.find(p => p.userId === user.id);
+      const userPlan = plans.find(p => p.userId === currentUser.id);
       setHealthPlan(userPlan || null);
     } catch (error) {
       console.error('Error loading health plan:', error);
@@ -76,7 +99,7 @@ export default function Dashboard({ user }: DashboardProps) {
 
   const loadFoodList = async () => {
     try {
-      const list = await storage.get<FoodList>('foodLists', user.id);
+      const list = await storage.get<FoodList>('foodLists', currentUser.id);
       setFoodList(list || null);
     } catch (error) {
       console.error('Error loading food list:', error);
@@ -105,19 +128,19 @@ export default function Dashboard({ user }: DashboardProps) {
     try {
       const planText = await generateHealthPlan({
         userProfile: {
-          name: user.name,
-          currentWeight: user.currentWeight,
-          targetWeight: user.targetWeight,
-          height: user.height,
-          age: user.age,
-          goals: user.goals,
-          lifestyle: user.lifestyle,
+          name: currentUser.name,
+          currentWeight: currentUser.currentWeight,
+          targetWeight: currentUser.targetWeight,
+          height: currentUser.height,
+          age: currentUser.age,
+          goals: currentUser.goals,
+          lifestyle: currentUser.lifestyle,
         }
       });
 
       const newPlan: HealthPlan = {
         id: crypto.randomUUID(),
-        userId: user.id,
+        userId: currentUser.id,
         plan: planText,
         exercises: [],
         recipes: [],
@@ -136,10 +159,36 @@ export default function Dashboard({ user }: DashboardProps) {
   };
 
   const getProgressPercentage = () => {
-    if (user.currentWeight === user.targetWeight) return 100;
-    const totalChange = Math.abs(user.targetWeight - user.currentWeight);
-    const currentChange = Math.abs((todayCheckIn?.weight || user.currentWeight) - user.currentWeight);
+    if (currentUser.currentWeight === currentUser.targetWeight) return 100;
+    const totalChange = Math.abs(currentUser.targetWeight - currentUser.currentWeight);
+    const currentChange = Math.abs((todayCheckIn?.weight || currentUser.currentWeight) - currentUser.currentWeight);
     return Math.min(100, (currentChange / totalChange) * 100);
+  };
+
+  const loadRecipes = async () => {
+    try {
+      const recipeData = await storage.get<{ userId: string; recipes: Recipe[] }>('recipes', currentUser.id);
+      setRecipes(recipeData?.recipes || []);
+    } catch (error) {
+      console.error('Error loading recipes:', error);
+    }
+  };
+
+  const loadActivities = async () => {
+    try {
+      const activityData = await storage.get<{ userId: string; activities: Activity[] }>('activities', currentUser.id);
+      setActivities(activityData?.activities || []);
+    } catch (error) {
+      console.error('Error loading activities:', error);
+    }
+  };
+
+  const handleUserUpdate = (updatedUser: UserProfile) => {
+    setCurrentUser(updatedUser);
+    setShowSettingsModal(false);
+    if (onUserUpdate) {
+      onUserUpdate(updatedUser);
+    }
   };
 
   const handleApplyUpdate = async () => {
@@ -182,7 +231,7 @@ export default function Dashboard({ user }: DashboardProps) {
         {/* Header */}
         <header className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white">Hej {user.name}! 👋</h1>
+            <h1 className="text-3xl font-bold text-white">Hej {currentUser.name}! 👋</h1>
             <p className="text-gray-300">Låt oss göra idag fantastisk</p>
           </div>
           
@@ -196,7 +245,10 @@ export default function Dashboard({ user }: DashboardProps) {
               <Heart className="w-6 h-6" />
             </button>
             
-            <button className="bg-white/20 hover:bg-white/30 text-white p-3 rounded-full transition-all">
+            <button 
+              onClick={() => setShowSettingsModal(true)}
+              className="bg-white/20 hover:bg-white/30 text-white p-3 rounded-full transition-all"
+            >
               <Settings className="w-6 h-6" />
             </button>
           </div>
@@ -206,12 +258,12 @@ export default function Dashboard({ user }: DashboardProps) {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
             <Target className="w-8 h-8 text-green-400 mx-auto mb-2" />
-            <p className="text-white font-semibold">{user.targetWeight} kg</p>
+            <p className="text-white font-semibold">{currentUser.targetWeight} kg</p>
             <p className="text-gray-300 text-sm">Målvikt</p>
           </div>
           
           <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
-            <Activity className="w-8 h-8 text-blue-400 mx-auto mb-2" />
+            <ActivityIcon className="w-8 h-8 text-blue-400 mx-auto mb-2" />
             <p className="text-white font-semibold">{getProgressPercentage().toFixed(0)}%</p>
             <p className="text-gray-300 text-sm">Framsteg</p>
           </div>
@@ -297,27 +349,37 @@ export default function Dashboard({ user }: DashboardProps) {
           </div>
 
           {/* Recipes */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 hover:bg-white/20 transition-all cursor-pointer">
+          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 hover:bg-white/20 transition-all cursor-pointer" onClick={() => setShowRecipeModal(true)}>
             <div className="flex items-center mb-4">
               <ChefHat className="w-8 h-8 text-yellow-400 mr-3" />
               <h3 className="text-lg font-semibold text-white">Recept</h3>
             </div>
-            <p className="text-gray-300 text-sm">AI-genererade recept baserat på dina preferenser</p>
+            <p className="text-gray-300 text-sm">
+              {recipes.length > 0 
+                ? `${recipes.length} recept sparade` 
+                : 'AI-genererade recept baserat på dina preferenser'
+              }
+            </p>
           </div>
 
           {/* Exercises */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 hover:bg-white/20 transition-all cursor-pointer">
+          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 hover:bg-white/20 transition-all cursor-pointer" onClick={() => setShowActivitiesModal(true)}>
             <div className="flex items-center mb-4">
               <Dumbbell className="w-8 h-8 text-purple-400 mr-3" />
               <h3 className="text-lg font-semibold text-white">Aktiviteter</h3>
             </div>
-            <p className="text-gray-300 text-sm">Roliga aktiviteter för dig och din partner</p>
+            <p className="text-gray-300 text-sm">
+              {activities.length > 0 
+                ? `${activities.length} aktiviteter planerade` 
+                : 'Roliga aktiviteter för dig och din partner'
+              }
+            </p>
           </div>
 
           {/* Progress */}
           <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6">
             <div className="flex items-center mb-4">
-              <Activity className="w-8 h-8 text-red-400 mr-3" />
+              <ActivityIcon className="w-8 h-8 text-red-400 mr-3" />
               <h3 className="text-lg font-semibold text-white">Framsteg</h3>
             </div>
             <div className="space-y-2">
@@ -363,7 +425,7 @@ export default function Dashboard({ user }: DashboardProps) {
       {/* Modals */}
       {showCheckInModal && (
         <DailyCheckInModal
-          user={user}
+          user={currentUser}
           onComplete={handleCheckInComplete}
           onClose={() => setShowCheckInModal(false)}
         />
@@ -378,13 +440,40 @@ export default function Dashboard({ user }: DashboardProps) {
 
       {showFoodListModal && (
         <FoodListModal
-          user={user}
+          user={currentUser}
           foodList={foodList}
           onSave={(list) => {
             setFoodList(list);
             setShowFoodListModal(false);
           }}
           onClose={() => setShowFoodListModal(false)}
+        />
+      )}
+
+      {showSettingsModal && (
+        <SettingsModal
+          user={currentUser}
+          onSave={handleUserUpdate}
+          onClose={() => setShowSettingsModal(false)}
+        />
+      )}
+
+      {showRecipeModal && (
+        <RecipeModal
+          user={currentUser}
+          recipes={recipes}
+          foodList={foodList}
+          onSave={setRecipes}
+          onClose={() => setShowRecipeModal(false)}
+        />
+      )}
+
+      {showActivitiesModal && (
+        <ActivitiesModal
+          user={currentUser}
+          activities={activities}
+          onSave={setActivities}
+          onClose={() => setShowActivitiesModal(false)}
         />
       )}
     </div>

@@ -51,6 +51,16 @@ class IndexedDBStorage {
         if (!db.objectStoreNames.contains('appSettings')) {
           db.createObjectStore('appSettings', { keyPath: 'id' });
         }
+
+        // Recipes store
+        if (!db.objectStoreNames.contains('recipes')) {
+          const recipesStore = db.createObjectStore('recipes', { keyPath: 'userId' });
+        }
+
+        // Activities store
+        if (!db.objectStoreNames.contains('activities')) {
+          const activitiesStore = db.createObjectStore('activities', { keyPath: 'userId' });
+        }
       };
     });
   }
