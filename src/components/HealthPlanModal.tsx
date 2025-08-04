@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { X, Target, Calendar, Edit3, Save, Plus, ChevronDown, ChevronUp, Clock } from 'lucide-react';
 import { HealthPlan, UserProfile } from '@/lib/types';
 import { storage } from '@/lib/storage';
-import { generateAdvancedHealthPlan } from '@/lib/openai';
+import { generateAdvancedHealthPlan } from '@/lib/claude';
 
 interface WeeklySchedule {
   week: number;

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { X, Dumbbell, Plus, Sparkles, Clock, Target, ChevronRight } from 'lucide-react';
 import { UserProfile } from '@/lib/types';
 import { storage } from '@/lib/storage';
-import { generateActivitySuggestions } from '@/lib/openai';
+import { generateActivitySuggestions } from '@/lib/claude';
 
 // Activity type definition
 interface Activity {

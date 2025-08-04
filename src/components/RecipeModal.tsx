@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { X, ChefHat, Plus, Link, Sparkles, Clock, Users, ChevronRight } from 'lucide-react';
 import { UserProfile, FoodList } from '@/lib/types';
 import { storage } from '@/lib/storage';
-import { generateRecipe } from '@/lib/openai';
+import { generateRecipe } from '@/lib/claude';
 
 // Recipe type definition
 interface Recipe {

@@ -17,7 +17,7 @@ import { UserProfile, DailyCheckIn, HealthPlan, FoodList, Recipe, Activity } fro
 import { useBluetooth } from '@/hooks/useBluetooth';
 import { useVersion } from '@/hooks/useVersion';
 import { storage } from '@/lib/storage';
-import { generateHealthPlan, generateMotivationalMessage } from '@/lib/openai';
+import { generateHealthPlan, generateMotivationalMessage } from '@/lib/claude';
 import DailyCheckInModal from './DailyCheckInModal';
 import HealthPlanModal from './HealthPlanModal';
 import FoodListModal from './FoodListModal';

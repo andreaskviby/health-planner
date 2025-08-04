@@ -1,13 +1,13 @@
-// lib/openai.ts
-import OpenAI from 'openai';
+// lib/claude.ts
+import Anthropic from '@anthropic-ai/sdk';
 
-function getOpenAIClient(): OpenAI {
-  const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+function getClaudeClient(): Anthropic {
+  const apiKey = process.env.NEXT_PUBLIC_CLAUDE_API_KEY;
   if (!apiKey) {
-    throw new Error('OpenAI API key is not configured. Please add NEXT_PUBLIC_OPENAI_API_KEY to your environment variables.');
+    throw new Error('Claude API key is not configured. Please add NEXT_PUBLIC_CLAUDE_API_KEY to your environment variables.');
   }
   
-  return new OpenAI({
+  return new Anthropic({
     apiKey,
     dangerouslyAllowBrowser: true, // Only for client-side usage in PWA
   });
@@ -31,7 +31,7 @@ export interface HealthPlanInput {
 }
 
 export async function generateHealthPlan(input: HealthPlanInput): Promise<string> {
-  const openai = getOpenAIClient();
+  const anthropic = getClaudeClient();
   const prompt = `
 Som en professionell hälsocoach, skapa en personlig hälsoplan för ${input.userProfile.name}.
 
@@ -63,23 +63,20 @@ Håll en positiv, uppmuntrande ton och fokusera på hållbara förändringar.
 `;
 
   try {
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4",
+    const completion = await anthropic.messages.create({
+      model: "claude-3-sonnet-20240229",
+      max_tokens: 2000,
       messages: [
-        {
-          role: "system",
-          content: "Du är en professionell hälsocoach som skapar personliga, motiverande hälsoplaner på svenska."
-        },
         {
           role: "user",
           content: prompt
         }
       ],
-      max_tokens: 2000,
-      temperature: 0.7,
     });
 
-    return completion.choices[0]?.message?.content || "Kunde inte generera hälsoplan. Försök igen senare.";
+    return completion.content[0]?.type === 'text' ? 
+      completion.content[0].text : 
+      "Kunde inte generera hälsoplan. Försök igen senare.";
   } catch (error) {
     console.error('Error generating health plan:', error);
     throw new Error('Kunde inte generera hälsoplan. Kontrollera din API-nyckel och försök igen.');
@@ -103,7 +100,7 @@ export interface RecipeData {
 }
 
 export async function generateRecipe(input: RecipeGenerationInput): Promise<RecipeData> {
-  const openai = getOpenAIClient();
+  const anthropic = getClaudeClient();
   
   let prompt = '';
   
@@ -150,23 +147,18 @@ Svara i detta exakta JSON-format:
   }
 
   try {
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4",
+    const completion = await anthropic.messages.create({
+      model: "claude-3-sonnet-20240229",
+      max_tokens: 1000,
       messages: [
-        {
-          role: "system",
-          content: "Du är en professionell kock som skapar strukturerade recept på svenska. Svara alltid med giltig JSON."
-        },
         {
           role: "user",
           content: prompt
         }
       ],
-      max_tokens: 1000,
-      temperature: 0.7,
     });
 
-    const response = completion.choices[0]?.message?.content || "";
+    const response = completion.content[0]?.type === 'text' ? completion.content[0].text : "";
     
     try {
       // Try to parse JSON response
@@ -198,7 +190,7 @@ Svara i detta exakta JSON-format:
 }
 
 export async function generateMotivationalMessage(checkInData: { mood: number; energy: number; notes: string }): Promise<string> {
-  const openai = getOpenAIClient();
+  const anthropic = getClaudeClient();
   const prompt = `
 Som en personlig hälsocoach, ge en kort motiverande kommentar (max 100 ord) baserat på dagens incheckning:
 
@@ -210,23 +202,20 @@ Svara på svenska med en uppmuntrande, personlig ton som känns äkta och hjälp
 `;
 
   try {
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4",
+    const completion = await anthropic.messages.create({
+      model: "claude-3-sonnet-20240229",
+      max_tokens: 150,
       messages: [
-        {
-          role: "system",
-          content: "Du är en varm, uppmuntrande hälsocoach som ger korta, personliga motiverande meddelanden på svenska."
-        },
         {
           role: "user",
           content: prompt
         }
       ],
-      max_tokens: 150,
-      temperature: 0.8,
     });
 
-    return completion.choices[0]?.message?.content || "Bra jobbat idag! Fortsätt så här! 💪";
+    return completion.content[0]?.type === 'text' ? 
+      completion.content[0].text : 
+      "Bra jobbat idag! Fortsätt så här! 💪";
   } catch (error) {
     console.error('Error generating motivational message:', error);
     return "Bra jobbat idag! Fortsätt så här! 💪";
@@ -252,7 +241,7 @@ export interface ActivitySuggestion {
 }
 
 export async function generateActivitySuggestions(input: ActivitySuggestionInput): Promise<ActivitySuggestion[]> {
-  const openai = getOpenAIClient();
+  const anthropic = getClaudeClient();
   const prompt = `
 Som en personlig tränare och hälsocoach, föreslå 5 aktiviteter för ${input.userProfile.name} baserat på:
 
@@ -281,23 +270,18 @@ Svara i detta exakta JSON-format:
 ]`;
 
   try {
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4",
+    const completion = await anthropic.messages.create({
+      model: "claude-3-sonnet-20240229",
+      max_tokens: 1500,
       messages: [
-        {
-          role: "system",
-          content: "Du är en professionell personlig tränare som skapar skräddarsydda aktivitetsförslag på svenska. Svara alltid med giltig JSON."
-        },
         {
           role: "user",
           content: prompt
         }
       ],
-      max_tokens: 1500,
-      temperature: 0.8,
     });
 
-    const response = completion.choices[0]?.message?.content || "";
+    const response = completion.content[0]?.type === 'text' ? completion.content[0].text : "";
     
     try {
       const suggestions = JSON.parse(response);
@@ -354,7 +338,7 @@ export interface WeeklySchedule {
 }
 
 export async function generateAdvancedHealthPlan(input: AdvancedHealthPlanInput): Promise<WeeklySchedule[]> {
-  const openai = getOpenAIClient();
+  const anthropic = getClaudeClient();
   const prompt = `
 Som en professionell hälsocoach, skapa ett detaljerat ${input.weeksCount}-veckors schema för ${input.userProfile.name}.
 
@@ -392,23 +376,18 @@ Svara i detta exakta JSON-format:
 Gör schemat realistiskt och hållbart på svenska.`;
 
   try {
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4",
+    const completion = await anthropic.messages.create({
+      model: "claude-3-sonnet-20240229",
+      max_tokens: 3000,
       messages: [
-        {
-          role: "system",
-          content: "Du är en professionell hälsocoach som skapar detaljerade, progressiva träningsprogram på svenska. Svara alltid med giltig JSON."
-        },
         {
           role: "user",
           content: prompt
         }
       ],
-      max_tokens: 3000,
-      temperature: 0.7,
     });
 
-    const response = completion.choices[0]?.message?.content || "";
+    const response = completion.content[0]?.type === 'text' ? completion.content[0].text : "";
     
     try {
       const schedule = JSON.parse(response);
