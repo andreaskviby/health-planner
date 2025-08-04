@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
+    "build": "next build && npm run postbuild",
+    "postbuild": "node scripts/fix-github-pages.js",
+    "build:github": "NEXT_PUBLIC_BASE_PATH=/health-planner npm run build",
     "start": "next start",
     "lint": "next lint"
   },
