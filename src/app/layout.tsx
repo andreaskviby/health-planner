@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Health Planner for Couples",
-  description: "A health planning PWA for couples with AI coaching and Bluetooth sync",
+  title: "Vår hälsa",
+  description: "En hälsoplaneringsapp för par med AI-coaching och Bluetooth-synk",
   manifest: "/manifest.json",
 };
 
