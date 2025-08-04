@@ -154,7 +154,7 @@ export default function Dashboard({ user }: DashboardProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 p-4">
+    <div className="h-full bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 p-4">
       {/* Update Notification */}
       <UpdateNotification
         isVisible={updateAvailable}
