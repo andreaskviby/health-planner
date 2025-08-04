@@ -154,7 +154,7 @@ export default function Dashboard({ user }: DashboardProps) {
   };
 
   return (
-    <div className="h-full bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 p-4">
+    <div className="min-h-full min-h-screen min-h-[100vh] min-h-[100dvh] bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 p-4 pb-safe">
       {/* Update Notification */}
       <UpdateNotification
         isVisible={updateAvailable}
@@ -178,7 +178,7 @@ export default function Dashboard({ user }: DashboardProps) {
         </div>
       )}
 
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-4xl mx-auto pt-safe">
         {/* Header */}
         <header className="flex items-center justify-between mb-8">
           <div>

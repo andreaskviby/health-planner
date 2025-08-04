@@ -65,7 +65,7 @@ export default function Home() {
 
   if (isLoading) {
     return (
-      <div className="h-full flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900">
+      <div className="min-h-full min-h-screen min-h-[100vh] min-h-[100dvh] flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 pt-safe pb-safe">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
           <p className="text-white">Laddar din hälsoresa...</p>
@@ -85,7 +85,7 @@ export default function Home() {
 
   if (bluetoothState.isHuggingMode) {
     return (
-      <div className="h-full flex items-center justify-center bg-gradient-to-br from-pink-500 via-red-500 to-yellow-500">
+      <div className="min-h-full min-h-screen min-h-[100vh] min-h-[100dvh] flex items-center justify-center bg-gradient-to-br from-pink-500 via-red-500 to-yellow-500 pt-safe pb-safe">
         <div className="text-center text-white p-8">
           <Heart className="w-24 h-24 mx-auto mb-6 animate-pulse" />
           <h1 className="text-4xl font-bold mb-4">Kramar Mode Aktiverat! 🤗</h1>
