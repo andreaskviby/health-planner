@@ -7,7 +7,20 @@ const withPWA = require('next-pwa')({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  /* config options here */
+  // Enable static export for GitHub Pages
+  output: 'export',
+  
+  // Handle GitHub Pages base path
+  basePath: process.env.NEXT_PUBLIC_BASE_PATH || '',
+  assetPrefix: process.env.NEXT_PUBLIC_BASE_PATH || '',
+  
+  // Disable image optimization for static export
+  images: {
+    unoptimized: true,
+  },
+  
+  // Handle trailing slashes
+  trailingSlash: true,
 };
 
 module.exports = withPWA(nextConfig);

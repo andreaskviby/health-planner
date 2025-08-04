@@ -2,6 +2,14 @@
 
 En modern PWA (Progressive Web App) för par som vill förbättra sin hälsa tillsammans med hjälp av AI-coaching och Bluetooth-synkning.
 
+[![Deploy to GitHub Pages](https://github.com/andreaskviby/health-planner/actions/workflows/deploy.yml/badge.svg)](https://github.com/andreaskviby/health-planner/actions/workflows/deploy.yml)
+
+## Live Demo 🌐
+
+**GitHub Pages**: [https://andreaskviby.github.io/health-planner/](https://andreaskviby.github.io/health-planner/)
+
+Appen kan installeras som PWA direkt från webbläsaren och fungerar offline!
+
 ## Funktioner ✨
 
 - **AI-driven hälsoplaner**: Personliga hälsoplaner genererade av OpenAI GPT-4
@@ -23,7 +31,22 @@ En modern PWA (Progressive Web App) för par som vill förbättra sin hälsa til
 - **Web Bluetooth API** - Partner-synkning
 - **OpenAI API** - AI-coaching och recept
 
-## Installation 📦
+## Deployment 🚀
+
+### GitHub Pages (Rekommenderad)
+
+Health Planner kan enkelt hostas på GitHub Pages **kostnadsfritt**:
+
+1. **Förka repository** på GitHub
+2. **Aktivera GitHub Pages** i repository settings → Pages → Source: "GitHub Actions"
+3. **Pushar till main-branchen** triggar automatisk deployment
+4. **Din app är live** på `https://ditt-användarnamn.github.io/health-planner/`
+
+**Full PWA-funktionalitet bevaras**: offline-mode, "Add to Home Screen", push-notifikationer.
+
+📖 **Detaljerad guide**: [GITHUB_PAGES.md](GITHUB_PAGES.md)
+
+### Lokal utveckling
 
 1. Klona repositoryt
 ```bash
@@ -54,8 +77,13 @@ npm run dev
 6. Bygg för produktion
 ```bash
 npm run build
-npm start
 ```
+
+### Andra deployment-alternativ
+
+- **Laravel Forge**: Se [DEPLOY.md](DEPLOY.md) för detaljerad guide
+- **Vercel/Netlify**: Standard Next.js deployment
+- **Docker**: Containeriserad deployment
 
 ## Användning 🎯
 
