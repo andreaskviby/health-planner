@@ -98,7 +98,7 @@ export default function ProfileSetup({ onComplete }: ProfileSetupProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center p-4">
+    <div className="h-full bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center p-4">
       <div className="bg-white/10 backdrop-blur-sm rounded-xl p-8 max-w-md w-full">
         <div className="text-center mb-8">
           <Heart className="w-12 h-12 text-pink-400 mx-auto mb-4" />
