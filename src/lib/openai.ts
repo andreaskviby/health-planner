@@ -327,3 +327,113 @@ Svara i detta exakta JSON-format:
     throw new Error('Kunde inte generera aktivitetsförslag. Kontrollera din API-nyckel och försök igen.');
   }
 }
+
+export interface AdvancedHealthPlanInput {
+  userProfile: {
+    name: string;
+    currentWeight: number;
+    targetWeight: number;
+    height: number;
+    age: number;
+    goals: string[];
+    lifestyle: string[];
+  };
+  startDate: Date;
+  weeksCount: number;
+  basePlan: string;
+}
+
+export interface WeeklySchedule {
+  week: number;
+  startDate: Date;
+  focus: string;
+  goals: string[];
+  exercises: string[];
+  nutrition: string[];
+  tips: string;
+}
+
+export async function generateAdvancedHealthPlan(input: AdvancedHealthPlanInput): Promise<WeeklySchedule[]> {
+  const openai = getOpenAIClient();
+  const prompt = `
+Som en professionell hälsocoach, skapa ett detaljerat ${input.weeksCount}-veckors schema för ${input.userProfile.name}.
+
+Personuppgifter:
+- Ålder: ${input.userProfile.age}
+- Nuvarande vikt: ${input.userProfile.currentWeight} kg
+- Målvikt: ${input.userProfile.targetWeight} kg
+- Längd: ${input.userProfile.height} cm
+- Mål: ${input.userProfile.goals.join(', ')}
+- Livsstil: ${input.userProfile.lifestyle.join(', ')}
+- Startdatum: ${input.startDate.toLocaleDateString('sv-SE')}
+
+Baserad på denna hälsoplan:
+${input.basePlan.substring(0, 500)}...
+
+Skapa ett progressivt schema där varje vecka bygger på den föregående. Varje vecka ska ha:
+- Ett specifikt fokusområde
+- Konkreta mål
+- Träningsaktiviteter (3-5 per vecka)
+- Näringsråd
+- Motiverande tips
+
+Svara i detta exakta JSON-format:
+[
+  {
+    "week": 1,
+    "focus": "Veckoans fokusområde",
+    "goals": ["mål 1", "mål 2", "mål 3"],
+    "exercises": ["träning 1", "träning 2", "träning 3"],
+    "nutrition": ["kost 1", "kost 2", "kost 3"],
+    "tips": "Motiverande tips för veckan"
+  }
+]
+
+Gör schemat realistiskt och hållbart på svenska.`;
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        {
+          role: "system",
+          content: "Du är en professionell hälsocoach som skapar detaljerade, progressiva träningsprogram på svenska. Svara alltid med giltig JSON."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      max_tokens: 3000,
+      temperature: 0.7,
+    });
+
+    const response = completion.choices[0]?.message?.content || "";
+    
+    try {
+      const schedule = JSON.parse(response);
+      if (Array.isArray(schedule)) {
+        return schedule.map((week, index) => ({
+          ...week,
+          startDate: new Date(input.startDate.getTime() + (index * 7 * 24 * 60 * 60 * 1000))
+        }));
+      }
+      return [];
+    } catch (parseError) {
+      console.error('Failed to parse weekly schedule JSON:', parseError);
+      // Fallback schedule
+      return Array.from({ length: Math.min(input.weeksCount, 4) }, (_, index) => ({
+        week: index + 1,
+        startDate: new Date(input.startDate.getTime() + (index * 7 * 24 * 60 * 60 * 1000)),
+        focus: index === 0 ? "Grundläggande rutiner" : index === 1 ? "Öka intensiteten" : index === 2 ? "Bygga styrka" : "Bibehålla momentum",
+        goals: [`Vecka ${index + 1} mål 1`, `Vecka ${index + 1} mål 2`],
+        exercises: [`Träning ${index + 1}A`, `Träning ${index + 1}B`],
+        nutrition: [`Kost ${index + 1}A`, `Kost ${index + 1}B`],
+        tips: `Tips för vecka ${index + 1}: Fokusera på att bygga hälsosamma vanor.`
+      }));
+    }
+  } catch (error) {
+    console.error('Error generating advanced health plan:', error);
+    throw new Error('Kunde inte generera veckoschema. Kontrollera din API-nyckel och försök igen.');
+  }
+}

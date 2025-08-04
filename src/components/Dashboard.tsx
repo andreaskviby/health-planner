@@ -434,7 +434,12 @@ export default function Dashboard({ user, onUserUpdate }: DashboardProps) {
       {showHealthPlanModal && healthPlan && (
         <HealthPlanModal
           healthPlan={healthPlan}
+          user={currentUser}
           onClose={() => setShowHealthPlanModal(false)}
+          onUpdate={(updatedPlan) => {
+            setHealthPlan(updatedPlan);
+            setShowHealthPlanModal(false);
+          }}
         />
       )}
 

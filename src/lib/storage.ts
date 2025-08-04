@@ -61,6 +61,19 @@ class IndexedDBStorage {
         if (!db.objectStoreNames.contains('activities')) {
           const activitiesStore = db.createObjectStore('activities', { keyPath: 'userId' });
         }
+
+        // Partner data stores
+        if (!db.objectStoreNames.contains('partnerProfiles')) {
+          db.createObjectStore('partnerProfiles', { keyPath: 'id' });
+        }
+
+        if (!db.objectStoreNames.contains('partnerHealthPlans')) {
+          db.createObjectStore('partnerHealthPlans', { keyPath: 'id' });
+        }
+
+        if (!db.objectStoreNames.contains('partnerFoodLists')) {
+          db.createObjectStore('partnerFoodLists', { keyPath: 'userId' });
+        }
       };
     });
   }
