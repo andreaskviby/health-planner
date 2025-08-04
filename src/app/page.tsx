@@ -6,13 +6,24 @@ import { useBluetooth } from '@/hooks/useBluetooth';
 import ProfileSetup from '@/components/ProfileSetup';
 import WelcomeTutorial from '@/components/WelcomeTutorial';
 import Dashboard from '@/components/Dashboard';
+import BluetoothSyncModal from '@/components/BluetoothSyncModal';
 import { storage } from '@/lib/storage';
-import { UserProfile, AppSettings } from '@/lib/types';
+import { UserProfile, AppSettings, HealthPlan, FoodList, Recipe, Activity, DailyCheckIn } from '@/lib/types';
+
+interface SyncData {
+  profile?: UserProfile;
+  healthPlan?: HealthPlan;
+  foodList?: FoodList;
+  recipes?: Recipe[];
+  activities?: Activity[];
+  progress?: DailyCheckIn[];
+}
 
 export default function Home() {
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [hasSeenTutorial, setHasSeenTutorial] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [showSyncModal, setShowSyncModal] = useState(false);
   const { bluetoothState, enterHuggingMode, hasNativeBluetoothAPI, isMobile } = useBluetooth();
 
   useEffect(() => {
@@ -63,6 +74,23 @@ export default function Home() {
     }
   };
 
+  const handleUserUpdate = (updatedUser: UserProfile) => {
+    setCurrentUser(updatedUser);
+  };
+
+  // Handle when Bluetooth connects - show sync modal
+  useEffect(() => {
+    if (bluetoothState.isConnected && bluetoothState.isHuggingMode && currentUser) {
+      setShowSyncModal(true);
+    }
+  }, [bluetoothState.isConnected, bluetoothState.isHuggingMode, currentUser]);
+
+  const handleSyncComplete = (syncedData: SyncData) => {
+    setShowSyncModal(false);
+    // Could show a notification about synced data here
+    console.log('Synced data:', syncedData);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-full min-h-screen min-h-[100vh] min-h-[100dvh] flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 pt-safe pb-safe">
@@ -85,45 +113,58 @@ export default function Home() {
 
   if (bluetoothState.isHuggingMode) {
     return (
-      <div className="min-h-full min-h-screen min-h-[100vh] min-h-[100dvh] flex items-center justify-center bg-gradient-to-br from-pink-500 via-red-500 to-yellow-500 pt-safe pb-safe">
-        <div className="text-center text-white p-8">
-          <Heart className="w-24 h-24 mx-auto mb-6 animate-pulse" />
-          <h1 className="text-4xl font-bold mb-4">Kramar Mode Aktiverat! 🤗</h1>
-          <p className="text-xl mb-6">
-            {hasNativeBluetoothAPI ? 'Söker efter din partner...' : 'Ansluter till din partner...'}
-          </p>
-          {bluetoothState.isConnected ? (
-            <div className="bg-white/20 backdrop-blur-sm rounded-lg p-6">
-              <Bluetooth className="w-12 h-12 mx-auto mb-4 text-green-300" />
-              <p className="text-lg">
-                {hasNativeBluetoothAPI ? 'Ansluten till partner! Data synkas...' : 'Ansluten! Ni är nu i kramar mode! 💕'}
-              </p>
-            </div>
-          ) : (
-            <div className="animate-pulse">
-              <Bluetooth className="w-12 h-12 mx-auto mb-4" />
-              <p>
-                {hasNativeBluetoothAPI 
-                  ? 'Håll enheten nära din partner...' 
-                  : isMobile 
-                    ? 'Förbereder kramar mode för mobil...' 
-                    : 'Aktiverar kramar mode...'
-                }
-              </p>
-            </div>
-          )}
-          {!hasNativeBluetoothAPI && isMobile && (
-            <div className="mt-4 bg-yellow-500/20 backdrop-blur-sm rounded-lg p-4">
-              <p className="text-sm text-yellow-100">
-                📱 Mobilläge: Full Bluetooth-support kräver Chrome på Android. 
-                Du kan fortfarande använda kramar mode med begränsad funktionalitet.
-              </p>
-            </div>
-          )}
+      <>
+        <div className="min-h-full min-h-screen min-h-[100vh] min-h-[100dvh] flex items-center justify-center bg-gradient-to-br from-pink-500 via-red-500 to-yellow-500 pt-safe pb-safe">
+          <div className="text-center text-white p-8">
+            <Heart className="w-24 h-24 mx-auto mb-6 animate-pulse" />
+            <h1 className="text-4xl font-bold mb-4">Kramar Mode Aktiverat! 🤗</h1>
+            <p className="text-xl mb-6">
+              {hasNativeBluetoothAPI ? 'Söker efter din partner...' : 'Ansluter till din partner...'}
+            </p>
+            {bluetoothState.isConnected ? (
+              <div className="bg-white/20 backdrop-blur-sm rounded-lg p-6">
+                <Bluetooth className="w-12 h-12 mx-auto mb-4 text-green-300" />
+                <p className="text-lg">
+                  {hasNativeBluetoothAPI ? 'Ansluten till partner! Data synkas...' : 'Ansluten! Ni är nu i kramar mode! 💕'}
+                </p>
+              </div>
+            ) : (
+              <div className="animate-pulse">
+                <Bluetooth className="w-12 h-12 mx-auto mb-4" />
+                <p>
+                  {hasNativeBluetoothAPI 
+                    ? 'Håll enheten nära din partner...' 
+                    : isMobile 
+                      ? 'Förbereder kramar mode för mobil...' 
+                      : 'Aktiverar kramar mode...'
+                  }
+                </p>
+              </div>
+            )}
+            {!hasNativeBluetoothAPI && isMobile && (
+              <div className="mt-4 bg-yellow-500/20 backdrop-blur-sm rounded-lg p-4">
+                <p className="text-sm text-yellow-100">
+                  📱 Mobilläge: Full Bluetooth-support kräver Chrome på Android. 
+                  Du kan fortfarande använda kramar mode med begränsad funktionalitet.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+        
+        {/* Bluetooth Sync Modal */}
+        {showSyncModal && currentUser && (
+          <BluetoothSyncModal
+            user={currentUser}
+            isConnected={bluetoothState.isConnected}
+            partnerName="Partner"
+            onClose={() => setShowSyncModal(false)}
+            onSyncComplete={handleSyncComplete}
+          />
+        )}
+      </>
     );
   }
 
-  return <Dashboard user={currentUser} />;
+  return <Dashboard user={currentUser} onUserUpdate={handleUserUpdate} />;
 }
